@@ -20,4 +20,11 @@ def get_bone_mesh() -> FileResponse:
             status_code=404,
             detail="bone.glb missing — run: uv run python ../scripts/generate_mesh.py",
         )
-    return FileResponse(path, media_type="model/gltf-binary", filename="bone.glb")
+    return FileResponse(
+        path,
+        media_type="model/gltf-binary",
+        filename="bone.glb",
+        headers={
+            "Cache-Control": "no-cache, max-age=0, must-revalidate",
+        },
+    )

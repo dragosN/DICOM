@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { uploadStudy } from './api/studies'
+import { MeshViewer } from './components/MeshViewer'
 import { SliceViewer } from './components/SliceViewer'
 import { StudyMeta } from './components/StudyMeta'
 import { UploadPanel } from './components/UploadPanel'
@@ -30,11 +31,11 @@ export default function App() {
       <header className="app-header">
         <div>
           <p className="brand">DICOM Portfolio</p>
-          <h1>CT series viewer</h1>
+          <h1>CT + mesh viewer</h1>
         </div>
         <p className="header-note">
-          Day 2 — upload, validate geometry, window/level axial slices.
-          Mesh viewer comes next.
+          Upload a series, validate geometry, window/level axial slices, then
+          clip and measure the demo bone mesh.
         </p>
       </header>
 
@@ -52,13 +53,17 @@ export default function App() {
 
         <div className="main-stage">
           {study ? (
-            <SliceViewer study={study} />
+            <div className="viewers-row">
+              <SliceViewer study={study} />
+              <MeshViewer />
+            </div>
           ) : (
             <section className="panel empty-stage">
               <h2>No study loaded</h2>
               <p className="muted">
                 Upload <code>good_series.zip</code> with the API running on
-                port 8000. Vite proxies <code>/api</code> → backend.
+                port 8000. Vite proxies <code>/api</code> → backend. After
+                ingest, axial CT and the bone mesh appear side by side.
               </p>
             </section>
           )}

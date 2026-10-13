@@ -10,6 +10,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "fixtures" / "meshes" / "bone.glb"
+# Keep the Vite static copy in sync for the viewer.
+PUBLIC_OUT = ROOT / "frontend" / "public" / "meshes" / "bone.glb"
 
 
 def _cylinder(radius: float = 4.0, height: float = 14.0, segments: int = 16):
@@ -42,9 +44,9 @@ def write_glb(path: Path) -> None:
     positions, indices = _cylinder()
     pos_bytes = struct.pack(f"<{len(positions)}f", *positions)
     idx_bytes = struct.pack(f"<{len(indices)}H", *indices)
-    # Align each buffer view to 4 bytes
-    def pad4(b: bytes) -> bytes:
-        return b + (b"\x00" * ((4 - (len(b) % 4)) % 4))
+    # Align to 4 bytes. BIN uses 0x00; JSON chunk must use 0x20 spaces (glTF spec).
+    def pad4(b: bytes, pad: bytes = b"\x00") -> bytes:
+        return b + (pad * ((4 - (len(b) % 4)) % 4))
 
     pos_padded = pad4(pos_bytes)
     idx_padded = pad4(idx_bytes)
@@ -99,7 +101,7 @@ def write_glb(path: Path) -> None:
     }
 
     json_bytes = json.dumps(gltf, separators=(",", ":")).encode("utf-8")
-    json_bytes = pad4(json_bytes)
+    json_bytes = pad4(json_bytes, pad=b"\x20")
 
     # GLB: 12-byte header + JSON chunk + BIN chunk
     total_length = 12 + 8 + len(json_bytes) + 8 + len(bin_chunk)
@@ -108,8 +110,13 @@ def write_glb(path: Path) -> None:
     bin_header = struct.pack("<I4s", len(bin_chunk), b"BIN\x00") + bin_chunk
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(header + json_chunk + bin_header)
+    blob = header + json_chunk + bin_header
+    path.write_bytes(blob)
     print(f"Wrote {path} ({path.stat().st_size} bytes)")
+    if path.resolve() == OUT.resolve():
+        PUBLIC_OUT.parent.mkdir(parents=True, exist_ok=True)
+        PUBLIC_OUT.write_bytes(blob)
+        print(f"Wrote {PUBLIC_OUT} ({PUBLIC_OUT.stat().st_size} bytes)")
 
 
 if __name__ == "__main__":
