@@ -31,10 +31,17 @@ def slice_to_png_bytes(
 ) -> bytes:
     pixels = apply_window(slice_hu, center=center, width=width)
     image = Image.fromarray(pixels, mode="L")
-    # Upscale tiny fixtures so the browser demo is visible
-    if max(image.size) < 256:
-        scale = max(1, 256 // max(image.size))
-        image = image.resize((image.width * scale, image.height * scale), Image.NEAREST)
+    # Upscale tiny synthetic fixtures; leave clinical-resolution CT as-is
+    longest = max(image.size)
+    if longest < 256:
+        scale = max(1, 512 // longest)
+        image = image.resize(
+            (image.width * scale, image.height * scale),
+            Image.Resampling.NEAREST,
+        )
+    elif longest > 1024:
+        # Cap huge matrices for snappy browser demos
+        image.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
     buf = io.BytesIO()
-    image.save(buf, format="PNG")
+    image.save(buf, format="PNG", optimize=True)
     return buf.getvalue()

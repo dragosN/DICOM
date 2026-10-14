@@ -13,6 +13,12 @@ build/
 # App data
 backend/data/
 
+# Large / downloaded medical samples (regenerate via scripts/)
+fixtures/dicom/tcia_sample/
+fixtures/dicom/tcia_sample.zip
+fixtures/dicom/tcia_sample_raw.zip
+fixtures/dicom/tcia_sample_meta.json
+
 # Node
 node_modules/
 frontend/dist/

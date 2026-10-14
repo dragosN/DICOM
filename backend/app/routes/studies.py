@@ -144,6 +144,14 @@ def ingest_paths(
     return StudyCreateResponse(**_summary_from_record(record).model_dump())
 
 
+FIXTURE_ROOT = Path(__file__).resolve().parents[3] / "fixtures" / "dicom"
+
+DEMO_SAMPLES = {
+    "synthetic": FIXTURE_ROOT / "good_series",
+    "tcia": FIXTURE_ROOT / "tcia_sample",
+}
+
+
 @router.post("", response_model=StudyCreateResponse)
 async def create_study(
     file: UploadFile = File(..., description="DICOM file or ZIP of a CT series"),
@@ -154,6 +162,35 @@ async def create_study(
         if not paths:
             raise HTTPException(status_code=400, detail="Empty upload")
         return ingest_paths(paths, deidentify=deidentify, study_store=store)
+
+
+@router.post("/demo/{sample}", response_model=StudyCreateResponse)
+def create_demo_study(
+    sample: str,
+    deidentify: bool = Query(True, description="Blank PHI tags on ingest"),
+) -> StudyCreateResponse:
+    """Load a fixture series without uploading (synthetic or TCIA sample)."""
+    key = sample.lower().strip()
+    if key not in DEMO_SAMPLES:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unknown sample '{sample}'. Use: {', '.join(sorted(DEMO_SAMPLES))}",
+        )
+    directory = DEMO_SAMPLES[key]
+    if not directory.exists():
+        hint = (
+            "Run: uv run python ../scripts/download_tcia_sample.py"
+            if key == "tcia"
+            else "Run: uv run python ../scripts/generate_fixtures.py"
+        )
+        raise HTTPException(
+            status_code=404,
+            detail=f"Fixture missing at {directory}. {hint}",
+        )
+    paths = sorted(p for p in directory.rglob("*") if p.is_file())
+    if not paths:
+        raise HTTPException(status_code=404, detail=f"No DICOM files in {directory}")
+    return ingest_paths(paths, deidentify=deidentify, study_store=store)
 
 
 @router.get("/{study_id}", response_model=StudySummary)

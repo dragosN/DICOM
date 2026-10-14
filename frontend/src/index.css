@@ -121,7 +121,7 @@ code,
 
 .panel-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
@@ -129,6 +129,70 @@ code,
 
 .panel-header h2 {
   margin: 0;
+}
+
+.panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.fullscreen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--line);
+  background: var(--accent-dim);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 0.3rem 0.55rem;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.fullscreen-btn:hover {
+  border-color: var(--accent);
+}
+
+.panel.is-fullscreen {
+  position: fixed;
+  inset: 0.75rem;
+  z-index: 1000;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: none;
+  background: color-mix(in srgb, var(--bg-1) 96%, transparent);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55);
+}
+
+.panel.is-fullscreen .slice-stage,
+.panel.is-fullscreen .mesh-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+
+.panel.is-fullscreen .slice-stage {
+  min-height: min(70vh, 720px);
+}
+
+.panel.is-fullscreen .mesh-stage {
+  min-height: min(65vh, 680px);
+}
+
+.panel.is-fullscreen .slice-image {
+  max-height: min(70vh, 720px);
+}
+
+.panel.is-fullscreen .controls {
+  flex: 0 0 auto;
+  max-height: 40vh;
+  overflow: auto;
 }
 
 .muted {
@@ -286,10 +350,24 @@ code,
   overflow: hidden;
 }
 
+.slice-stage.is-busy .slice-image {
+  opacity: 0.72;
+  transition: opacity 80ms linear;
+}
+
 .slice-image {
   max-width: 100%;
-  image-rendering: pixelated;
+  max-height: 420px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  image-rendering: auto;
   display: block;
+  filter: contrast(1.05);
+}
+
+.slice-image.is-synthetic {
+  image-rendering: pixelated;
 }
 
 .slice-loading {
@@ -374,11 +452,11 @@ code,
 }
 
 .mesh-stage {
-  height: 320px;
+  height: 380px;
   border-radius: 8px;
   border: 1px solid var(--line);
   overflow: hidden;
-  background: #05080c;
+  background: #070b10;
 }
 
 .mesh-stage canvas {

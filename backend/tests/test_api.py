@@ -121,3 +121,19 @@ def test_bone_mesh_endpoint(client: TestClient) -> None:
     res = client.get("/meshes/bone")
     assert res.status_code == 200
     assert res.content[:4] == b"glTF"
+
+
+def test_demo_synthetic_loads(client: TestClient) -> None:
+    res = client.post("/studies/demo/synthetic")
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["nifti_ready"] is True
+    assert body["slice_count"] == 8
+
+
+def test_demo_tcia_missing_is_404(client: TestClient) -> None:
+    tcia_dir = FIXTURES / "tcia_sample"
+    if tcia_dir.exists() and any(tcia_dir.iterdir()):
+        pytest.skip("TCIA sample present")
+    res = client.post("/studies/demo/tcia")
+    assert res.status_code == 404

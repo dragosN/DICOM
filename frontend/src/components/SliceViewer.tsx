@@ -1,5 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { sliceUrl } from '../api/studies'
+import { FullscreenButton } from './FullscreenButton'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
+import { usePanelFullscreen } from '../hooks/usePanelFullscreen'
 import type { StudySummary } from '../types'
 
 type SliceViewerProps = {
@@ -8,29 +11,77 @@ type SliceViewerProps = {
 
 export function SliceViewer({ study }: SliceViewerProps) {
   const maxZ = Math.max(0, (study.shape_ijk?.[2] ?? study.slice_count) - 1)
+
+  // Slider UI updates immediately; image fetch uses debounced values.
   const [z, setZ] = useState(() => Math.floor(maxZ / 2))
   const [center, setCenter] = useState(40)
   const [width, setWidth] = useState(400)
-  const [loading, setLoading] = useState(true)
+
+  const debouncedZ = useDebouncedValue(z, 80)
+  const debouncedCenter = useDebouncedValue(center, 120)
+  const debouncedWidth = useDebouncedValue(width, 120)
+
+  const [src, setSrc] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const requestId = useRef(0)
+  const { active: fullscreen, toggle: toggleFullscreen } = usePanelFullscreen()
 
   useEffect(() => {
     setZ(Math.floor(maxZ / 2))
-    setLoading(true)
     setError(null)
   }, [study.id, maxZ])
 
-  const url = study.nifti_ready
-    ? sliceUrl(study.id, z, center, width)
-    : null
+  useEffect(() => {
+    if (!study.nifti_ready) {
+      setSrc(null)
+      return
+    }
+
+    const nextUrl = sliceUrl(
+      study.id,
+      debouncedZ,
+      debouncedCenter,
+      debouncedWidth,
+    )
+    const id = ++requestId.current
+    setBusy(true)
+
+    const preloader = new Image()
+    preloader.onload = () => {
+      if (id !== requestId.current) return
+      setSrc(nextUrl)
+      setBusy(false)
+      setError(null)
+    }
+    preloader.onerror = () => {
+      if (id !== requestId.current) return
+      setBusy(false)
+      setError('Failed to load slice image')
+    }
+    preloader.src = nextUrl
+
+    return () => {
+      preloader.onload = null
+      preloader.onerror = null
+    }
+  }, [study.id, study.nifti_ready, debouncedZ, debouncedCenter, debouncedWidth])
+
+  const isTiny =
+    !!study.shape_ijk &&
+    Math.max(study.shape_ijk[0], study.shape_ijk[1]) <= 64
 
   return (
-    <section className="panel slice-panel">
+    <section className={`panel slice-panel${fullscreen ? ' is-fullscreen' : ''}`}>
       <div className="panel-header">
         <h2>Axial slice</h2>
-        <span className="muted mono">
-          z={z}/{maxZ} · WL {center}/{width}
-        </span>
+        <div className="panel-header-actions">
+          <span className="muted mono">
+            z={z}/{maxZ} · WL {center}/{width}
+            {busy ? ' · …' : ''}
+          </span>
+          <FullscreenButton active={fullscreen} onToggle={toggleFullscreen} />
+        </div>
       </div>
 
       {!study.nifti_ready && (
@@ -39,25 +90,19 @@ export function SliceViewer({ study }: SliceViewerProps) {
         </p>
       )}
 
-      {url && (
-        <div className="slice-stage">
-          {loading && <div className="slice-loading">Loading slice…</div>}
+      {study.nifti_ready && (
+        <div className={`slice-stage${busy ? ' is-busy' : ''}`}>
           {error && <div className="warn-text">{error}</div>}
-          <img
-            key={url}
-            src={url}
-            alt={`Axial slice ${z}`}
-            className="slice-image"
-            onLoad={() => {
-              setLoading(false)
-              setError(null)
-            }}
-            onError={() => {
-              setLoading(false)
-              setError('Failed to load slice image')
-            }}
-            onLoadStart={() => setLoading(true)}
-          />
+          {src ? (
+            <img
+              src={src}
+              alt={`Axial slice ${debouncedZ}`}
+              className={`slice-image${isTiny ? ' is-synthetic' : ''}`}
+              draggable={false}
+            />
+          ) : (
+            <div className="slice-loading">Loading slice…</div>
+          )}
         </div>
       )}
 

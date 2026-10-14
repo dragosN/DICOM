@@ -1,5 +1,9 @@
 import { useState } from 'react'
-import { uploadStudy } from './api/studies'
+import {
+  loadDemoStudy,
+  uploadStudy,
+  type DemoSample,
+} from './api/studies'
 import { MeshViewer } from './components/MeshViewer'
 import { SliceViewer } from './components/SliceViewer'
 import { StudyMeta } from './components/StudyMeta'
@@ -12,18 +16,26 @@ export default function App() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleUpload(file: File) {
+  async function runIngest(action: () => Promise<StudySummary>) {
     setBusy(true)
     setError(null)
     try {
-      const result = await uploadStudy(file, true)
+      const result = await action()
       setStudy(result)
     } catch (err) {
       setStudy(null)
-      setError(err instanceof Error ? err.message : 'Upload failed')
+      setError(err instanceof Error ? err.message : 'Ingest failed')
     } finally {
       setBusy(false)
     }
+  }
+
+  async function handleUpload(file: File) {
+    await runIngest(() => uploadStudy(file, true))
+  }
+
+  async function handleDemo(sample: DemoSample) {
+    await runIngest(() => loadDemoStudy(sample, true))
   }
 
   return (
@@ -41,7 +53,11 @@ export default function App() {
 
       <main className="layout">
         <aside className="sidebar">
-          <UploadPanel busy={busy} onUpload={handleUpload} />
+          <UploadPanel
+            busy={busy}
+            onUpload={handleUpload}
+            onLoadDemo={handleDemo}
+          />
           {error && <p className="error-banner">{error}</p>}
           {study && (
             <>

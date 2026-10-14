@@ -27,6 +27,23 @@ export async function getStudy(id: string): Promise<StudySummary> {
   return res.json() as Promise<StudySummary>
 }
 
+export type DemoSample = 'synthetic' | 'tcia'
+
+export async function loadDemoStudy(
+  sample: DemoSample,
+  deidentify = true,
+): Promise<StudySummary> {
+  const res = await fetch(
+    `${API_BASE}/studies/demo/${sample}?deidentify=${deidentify}`,
+    { method: 'POST' },
+  )
+  if (!res.ok) {
+    const detail = await res.text()
+    throw new Error(detail || `Demo load failed (${res.status})`)
+  }
+  return res.json() as Promise<StudySummary>
+}
+
 /** Build a cache-busting slice URL for the given window/level. */
 export function sliceUrl(
   studyId: string,
