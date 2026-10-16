@@ -7,9 +7,11 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
+from app.paths import fixtures_root
+
 router = APIRouter(prefix="/meshes", tags=["meshes"])
 
-MESH_ROOT = Path(__file__).resolve().parents[3] / "fixtures" / "meshes"
+MESH_ROOT = fixtures_root() / "meshes"
 
 
 @router.get("/bone")

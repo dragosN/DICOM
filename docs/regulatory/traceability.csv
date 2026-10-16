@@ -1,0 +1,13 @@
+requirement_id,verification,artifact,notes
+REQ-GEO-001,unit,backend/tests/test_geometry.py,IOP/IPP/spacing helpers
+REQ-GEO-002,unit,backend/tests/test_geometry.py;backend/tests/test_nifti.py,affine_lps_to_ras; nibabel RAS
+REQ-GEO-003,unit,backend/tests/test_nifti.py,rescale to HU
+REQ-GEO-004,unit,backend/tests/test_nifti.py,spacing/orientation round-trip
+REQ-VAL-001,unit,backend/tests/test_validate.py,mixed SeriesInstanceUID
+REQ-VAL-002,unit,backend/tests/test_validate.py,inconsistent spacing/size
+REQ-VAL-003,unit,backend/tests/test_validate.py,inconsistent IOP
+REQ-VAL-004,unit,backend/tests/test_validate.py,missing-slice gap
+REQ-DEID-001,unit,backend/tests/test_deid.py,PHI tags blanked
+REQ-VIEW-001,manual,frontend/src/components/SliceViewer.tsx,window/level + slice index
+REQ-VIEW-002,manual,frontend/src/components/MeshViewer.tsx,orbit/clip/measure
+REQ-VIEW-003,manual,frontend/src/components/MeshViewer.tsx,disclaimer in UI

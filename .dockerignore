@@ -1,0 +1,10 @@
+**/.venv
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/dist
+**/build
+**/.git
+**/backend/data
+**/.DS_Store
+**/fixtures/dicom/tcia_sample_raw.zip

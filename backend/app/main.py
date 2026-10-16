@@ -31,10 +31,12 @@ def root() -> dict[str, object]:
     return {
         "name": "DICOM Portfolio API",
         "status": "ok",
+        "intended_use": "Educational / interview demo only. Not SaMD. Not for diagnosis or treatment.",
         "docs": "/docs",
         "health": "/health",
         "endpoints": {
             "POST /studies": "Upload a DICOM ZIP",
+            "POST /studies/demo/{synthetic|tcia}": "Load fixture series",
             "GET /studies/{id}": "Study metadata + validation",
             "GET /studies/{id}/slices/{z}": "Axial PNG slice",
             "GET /studies/{id}/nifti": "Download NIfTI",

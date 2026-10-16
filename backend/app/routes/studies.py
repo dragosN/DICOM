@@ -13,6 +13,7 @@ from app.convert.nifti import axial_slice_hu, series_to_nifti
 from app.deid import deidentify_datasets
 from app.dicom.validate import load_dicom_files, validate_series
 from app.imaging import slice_to_png_bytes
+from app.paths import fixtures_root
 from app.schemas import StudyCreateResponse, StudySummary, ValidationIssueOut
 from app.store import StudyStore, store
 
@@ -144,7 +145,7 @@ def ingest_paths(
     return StudyCreateResponse(**_summary_from_record(record).model_dump())
 
 
-FIXTURE_ROOT = Path(__file__).resolve().parents[3] / "fixtures" / "dicom"
+FIXTURE_ROOT = fixtures_root() / "dicom"
 
 DEMO_SAMPLES = {
     "synthetic": FIXTURE_ROOT / "good_series",
